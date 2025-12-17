@@ -8,13 +8,12 @@ GRID, SIZE, STONE = 15, 30, 13
 
 class GobangClientGUI:
     def __init__(self):
-        # ===== 遊戲狀態 =====
+        # 遊戲當前狀態
         self.started = False
         self.my_turn = False
         self.my_color = 0   # 1=黑 2=白
         self.op_color = 0
 
-        # ===== UI =====
         self.window = tk.Tk()
         self.window.title("五子棋 CLIENT（等待中）")
 
@@ -38,7 +37,7 @@ class GobangClientGUI:
         self.draw_board()
         self.board = [[0]*GRID for _ in range(GRID)]
 
-        # ===== SOCKET =====
+        #  SOCKET 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.sock.connect(("127.0.0.1", 8000))
@@ -50,9 +49,9 @@ class GobangClientGUI:
 
         threading.Thread(target=self.recv_loop, daemon=True).start()
 
-    # ===============================
-    # 選擇先後手
-    # ===============================
+
+    # 選擇黑棋或白棋(先後手)
+ 
     def choose_black(self):
         if self.started:
             return
@@ -69,9 +68,7 @@ class GobangClientGUI:
         self.btn_black.config(state=tk.DISABLED)
         self.btn_white.config(state=tk.DISABLED)
 
-    # ===============================
-    # 畫面
-    # ===============================
+    # 遊戲畫面
     def draw_board(self):
         for i in range(GRID):
             self.canvas.create_line(SIZE/2, SIZE/2+i*SIZE, SIZE/2+(GRID-1)*SIZE, SIZE/2+i*SIZE)
@@ -82,9 +79,9 @@ class GobangClientGUI:
         fill = "black" if color==1 else "white"
         self.canvas.create_oval(px-STONE, py-STONE, px+STONE, py+STONE, fill=fill)
 
-    # ===============================
-    # 點擊下棋（只送請求）
-    # ===============================
+    
+    #下棋指令（只送請求）
+
     def click(self, event):
         if not self.started or not self.my_turn:
             return
@@ -98,14 +95,10 @@ class GobangClientGUI:
         self.place_stone(x, y, self.my_color)
         self.my_turn = False
 
-    # ===============================
     def place_stone(self, x, y, color):
         self.board[y][x] = color
         self.draw_stone(x, y, color)
-
-    # ===============================
     # RESET
-    # ===============================
     def reset_request(self):
         self.sock.sendall("RESET\n".encode())
 
@@ -121,9 +114,9 @@ class GobangClientGUI:
         self.btn_black.config(state=tk.NORMAL)
         self.btn_white.config(state=tk.NORMAL)
 
-    # ===============================
-    # 接收 server 訊息
-    # ===============================
+    
+    # 接收server端的訊息
+
     def recv_loop(self):
         try:
             while True:
@@ -133,14 +126,14 @@ class GobangClientGUI:
                     break
                 data = data.decode().strip()
 
-                # --- 遊戲已滿 ---
+                #遊戲人數已滿 
                 if data == "FULL":
                     messagebox.showinfo("遊戲已滿", "遊戲已滿，請稍後再試")
                     self.sock.close()
                     self.window.destroy()
                     break
 
-                # --- 遊戲開始 ---
+                # 遊戲開始
                 if data.startswith("START"):
                     _, color = data.split(",")
                     self.started = True
@@ -155,7 +148,7 @@ class GobangClientGUI:
                         self.my_turn = False
                         self.window.title("五子棋 CLIENT（白棋）")
 
-                # --- 落子 ---
+                # 落子
                 elif data.startswith("MOVE"):
                     _, x, y = data.split(",")
                     x, y = int(x), int(y)
@@ -168,7 +161,7 @@ class GobangClientGUI:
                     # 輪到自己下棋
                     self.my_turn = True
 
-                # --- 勝負 ---
+                # - 勝負結果
                 elif data.startswith("WIN"):
                     _, winner = data.split(",")
                     if int(winner) == self.my_color:
@@ -176,7 +169,7 @@ class GobangClientGUI:
                     else:
                         messagebox.showinfo("結果", "😢 你輸了！")
 
-                # --- 重置 ---
+                # 遊戲重製
                 elif data == "RESET":
                     self.reset_board()
 
