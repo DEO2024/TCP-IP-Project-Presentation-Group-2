@@ -25,7 +25,6 @@ class GobangServer:
         while True:
             pass
 
-    # ===============================
     def accept_clients(self):
         while True:
             conn, addr = self.sock.accept()
@@ -48,7 +47,6 @@ class GobangServer:
                 daemon=True
             ).start()
 
-    # ===============================
     def handle_client(self, conn):
         addr = conn.getpeername()
         try:
@@ -58,12 +56,12 @@ class GobangServer:
                     break
                 data = data.decode().strip()
 
-                # ---------- 選顏色 ----------
+                # 選擇先後手
                 if data.startswith("COLOR"):
                     _, color = data.split(",")
 
                     if self.turn != 0:
-                        continue  # 遊戲已開始不能再選
+                        continue  # 遊戲已開始不能再改變
 
                     with self.lock:
                         # 當前 client 選黑棋
@@ -89,7 +87,7 @@ class GobangServer:
                         if 1 in self.colors.values() and 2 in self.colors.values() and self.turn == 0:
                             self.start_game()
 
-                # ---------- 落子 ----------
+                # - 落子
                 if data.startswith("MOVE"):
                     if self.turn == 0:
                         continue
@@ -115,7 +113,7 @@ class GobangServer:
 
                     self.turn = 2 if self.turn == 1 else 1
 
-                # ---------- 重開 ----------
+                #  重新開使
                 if data == "RESET":
                     self.broadcast("RESET")
                     self.reset()
@@ -126,7 +124,6 @@ class GobangServer:
             print(f"玩家 {addr} 斷線")
             self.remove_client(conn)
 
-    # ===============================
     def remove_client(self, conn):
         if conn in self.clients:
             self.clients.remove(conn)
@@ -139,8 +136,7 @@ class GobangServer:
             conn.close()
         except:
             pass
-
-    # ===============================
+            
     def start_game(self):
         self.turn = 1  # 黑棋先手
         print("遊戲開始，黑棋先手")
@@ -151,7 +147,7 @@ class GobangServer:
             elif color == 2:
                 c.sendall("START,white\n".encode())
 
-    # ===============================
+    
     def reset(self):
         print("遊戲重置，回到等待狀態")
         self.board = [[0] * GRID for _ in range(GRID)]
@@ -159,15 +155,14 @@ class GobangServer:
         self.black_taken = False
         self.colors.clear()
 
-    # ===============================
+
     def broadcast(self, msg):
         for c in self.clients:
             try:
                 c.sendall((msg + "\n").encode())
             except:
                 pass
-
-    # ===============================
+                
     def check_win(self, c):
         dirs = [(1,0),(0,1),(1,1),(1,-1)]
         for y in range(GRID):
