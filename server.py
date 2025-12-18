@@ -116,12 +116,12 @@ class GobangServer:
 
                   
                         # 若黑白棋皆已分配 強制遊戲開始
-                               if (
+                            if (
                             1 in self.colors.values() and
                             2 in self.colors.values() and
                             self.turn == 0
                         ):
-                            self.start_game()
+                                self.start_game()
 
        
                 # 玩家落子
